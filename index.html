@@ -136,13 +136,24 @@ loadNext();
 
 /* Posição automática */
 function getNextPosition(){
-    const items=currentSheet.querySelectorAll('.item');
-    const cols=5;
-    const cellW=110;
-    const cellH=130;
-    const margin=8;
-    let i=items.length;
-    return {x:margin+(i%cols)*cellW, y:margin+Math.floor(i/cols)*cellH};
+    const items = currentSheet.querySelectorAll('.item');
+    const cols = 4;  // quantidade ideal
+    const margin = 10;
+
+    const sheetWidth = currentSheet.clientWidth;
+    const cellW = (sheetWidth - margin*(cols+1)) / cols;
+    const cellH = cellW * 1.2;
+
+    let i = items.length;
+    let col = i % cols;
+    let row = Math.floor(i / cols);
+
+    return {
+        x: margin + col * (cellW + margin),
+        y: margin + row * (cellH + margin)
+    };
+}
+
 }
 
 /* Adicionar desenho */
@@ -203,6 +214,7 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
+
 
 
 
