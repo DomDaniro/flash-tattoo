@@ -5,16 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flash Tattoo Studio PRO</title>
 
+<!-- FONTES DE TATUAGEM -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Playfair+Display&family=Great+Vibes&family=Permanent+Marker&family=Cinzel&family=Special+Elite&display=swap" rel="stylesheet">
+
 <style>
 body{
 margin:0;
 background:#000;
 font-family:Arial, sans-serif;
 color:white;
-text-align:center;
 }
 
 header{
+text-align:center;
 padding:15px;
 }
 
@@ -22,27 +25,58 @@ button{
 background:white;
 color:#1976d2;
 border:none;
-padding:10px 16px;
-margin:5px;
+padding:8px 14px;
+margin:4px;
 border-radius:20px;
 font-weight:bold;
 }
 
-#catalog{
+/* LAYOUT PRINCIPAL */
+.main{
 display:flex;
-flex-wrap:wrap;
-justify-content:center;
+flex-direction:column;
+align-items:center;
+}
+
+/* CATÁLOGO */
+#catalog{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(80px,1fr));
 gap:10px;
-padding:10px;
+width:95%;
+max-width:900px;
 }
-
 #catalog img{
-width:90px;
 background:white;
-border-radius:12px;
 padding:6px;
+border-radius:12px;
 }
 
+/* PAINEL TEXTO */
+.panel{
+background:#111;
+padding:15px;
+margin:15px 0;
+border-radius:15px;
+width:95%;
+max-width:900px;
+}
+
+.panel input,.panel select{
+padding:6px;
+border-radius:8px;
+border:none;
+margin:4px;
+}
+
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
+/* FOLHA */
 .sheet{
 width:794px;
 height:1123px;
@@ -52,33 +86,31 @@ position:relative;
 border-radius:20px;
 }
 
-.item{
-position:absolute;
-text-align:center;
-}
-
-.item img{
-width:100%;
-}
+.item{position:absolute;text-align:center;}
+.item img{width:100%;}
 
 .textItem{
 position:absolute;
 cursor:move;
+color:black;
 white-space:nowrap;
 }
 
-.textTools button{
-font-size:12px;
-padding:3px 6px;
-margin:2px;
+/* BOTÕES DO TEXTO */
+.textBtns{
+position:absolute;
+bottom:-25px;
+left:0;
+}
+.textBtns button{
+font-size:11px;
+padding:2px 5px;
+margin:1px;
 border-radius:6px;
 }
 
 @media(max-width:820px){
-.sheet{
-transform:scale(0.5);
-transform-origin:top center;
-}
+.sheet{transform:scale(0.45);transform-origin:top center;}
 }
 </style>
 </head>
@@ -90,33 +122,38 @@ transform-origin:top center;
 <button onclick="window.print()">Imprimir</button>
 </header>
 
-<h2>Catálogo</h2>
+<div class="main">
 
+<h2>Catálogo</h2>
 <div id="catalog"></div>
 
+<div class="panel">
 <h3>Texto para tatuagem</h3>
 
-<input id="textInput" placeholder="Digite a frase" style="padding:6px;border-radius:8px;border:none">
+<input id="textInput" placeholder="Digite a frase">
 
 <select id="fontSelect">
-<option value="Arial">Simples</option>
-<option value="Georgia">Elegante</option>
-<option value="Courier New">Old School</option>
-<option value="Brush Script MT">Cursiva</option>
+<option value="Anton">Bold Tattoo</option>
+<option value="Cinzel">Romana</option>
+<option value="Playfair Display">Elegante</option>
+<option value="Permanent Marker">Rabiscado</option>
+<option value="Great Vibes">Cursiva fina</option>
+<option value="Special Elite">Old School</option>
 </select>
 
-<br><br>
+<div class="controls">
+<label>Tamanho <input type="range" id="sizeRange" min="14" max="80" value="30"></label>
+<label>Curva <input type="range" id="curveRange" min="-100" max="100" value="0"></label>
+<label>Espaçamento <input type="range" id="spacingRange" min="0" max="10" value="0"></label>
+<label>Contorno <input type="range" id="outlineRange" min="0" max="5" value="0"></label>
+<label>Sombra <input type="range" id="shadowRange" min="0" max="10" value="0"></label>
+</div>
 
-Tamanho <input type="range" id="sizeRange" min="14" max="80" value="30">
-Curva <input type="range" id="curveRange" min="-100" max="100" value="0">
-Espaçamento <input type="range" id="spacingRange" min="0" max="10" value="0">
-Contorno <input type="range" id="outlineRange" min="0" max="5" value="0">
-Sombra <input type="range" id="shadowRange" min="0" max="10" value="0">
-
-<br><br>
 <button onclick="addTextToSheet()">Adicionar Texto na Folha</button>
+</div>
 
 <div id="sheets"></div>
+</div>
 
 <script>
 
@@ -124,7 +161,8 @@ const catalog=document.getElementById('catalog');
 const sheets=document.getElementById('sheets');
 let currentSheet=null;
 
-for(let i=1;i<=30;i++){
+/* CARREGAR FLASHES */
+for(let i=1;i<=40;i++){
 const img=document.createElement('img');
 img.src='flashes/'+i+'.png';
 img.onclick=()=>addFlash(img.src);
@@ -136,20 +174,14 @@ currentSheet=document.createElement('div');
 currentSheet.className='sheet';
 sheets.appendChild(currentSheet);
 }
-
 newSheet();
 
 function getNextPosition(){
 const items=currentSheet.querySelectorAll('.item');
-const cols=4;
-const margin=10;
-const sheetWidth=currentSheet.clientWidth;
-const cellW=(sheetWidth-margin*(cols+1))/cols;
-const cellH=cellW*1.2;
+const cols=4, margin=10;
+const w=(794-margin*(cols+1))/cols;
 let i=items.length;
-let col=i%cols;
-let row=Math.floor(i/cols);
-return {x:margin+col*(cellW+margin),y:margin+row*(cellH+margin)};
+return{ x:margin+(i%cols)*(w+margin), y:margin+Math.floor(i/cols)*(w+margin)};
 }
 
 function addFlash(src){
@@ -181,42 +213,41 @@ it.style.top=pos.y+'px';
 });
 }
 
+/* TEXTO */
 function addTextToSheet(){
 const text=document.getElementById('textInput').value;
 if(!text)return;
 const div=document.createElement('div');
 div.className='textItem';
 div.dataset.text=text;
-div.style.left='100px';
-div.style.top='100px';
+div.style.left='150px';
+div.style.top='200px';
 updateText(div);
+
+const btns=document.createElement('div');
+btns.className='textBtns';
+btns.innerHTML=`
+<button onclick="updateText(this.parentElement.parentElement)">↺</button>
+<button onclick="this.parentElement.parentElement.remove()">🗑</button>`;
+div.appendChild(btns);
+
 currentSheet.appendChild(div);
 }
 
 function updateText(div){
-const size=document.getElementById('sizeRange').value;
-const curve=document.getElementById('curveRange').value;
-const spacing=document.getElementById('spacingRange').value;
-const outline=document.getElementById('outlineRange').value;
-const shadow=document.getElementById('shadowRange').value;
-const font=document.getElementById('fontSelect').value;
+const size=sizeRange.value;
+const font=fontSelect.value;
+const spacing=spacingRange.value;
+const outline=outlineRange.value;
+const shadow=shadowRange.value;
 
-div.innerHTML="";
 div.style.fontSize=size+'px';
 div.style.fontFamily=font;
 div.style.letterSpacing=spacing+'px';
-div.style.color='black';
-div.style.textShadow=shadow>0?`2px 2px ${shadow}px rgba(0,0,0,0.4)`:'none';
 div.style.webkitTextStroke=outline+'px black';
+div.style.textShadow=shadow>0?`2px 2px ${shadow}px rgba(0,0,0,0.5)`:'none';
 div.textContent=div.dataset.text;
 }
-
-document.querySelectorAll('input,select').forEach(el=>{
-el.oninput=()=>{
-const t=currentSheet.querySelector('.textItem');
-if(t)updateText(t);
-}
-});
 </script>
 
 </body>
