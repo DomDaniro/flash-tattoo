@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Flash Tattoo Studio</title>
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <style>
 *{box-sizing:border-box;}
@@ -24,7 +26,6 @@ body{
     height:70px;
 }
 
-/* BOTÕES */
 .controls{
     margin-top:90px;
     text-align:center;
@@ -41,7 +42,7 @@ button{
 /* CATÁLOGO */
 #catalog{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(80px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
     gap:10px;
     padding:10px;
 }
@@ -52,9 +53,7 @@ button{
     padding:5px;
 }
 
-.flash img{
-    width:100%;
-}
+.flash img{width:100%;}
 
 /* FOLHA */
 .sheet{
@@ -68,17 +67,19 @@ button{
     overflow:hidden;
 }
 
-/* TAMANHO CORRIGIDO DOS DESENHOS */
-.item img{
-    height:5%;
-    max-height:2,5cm;
-}
-
+/* FLASH NA FOLHA */
 .item{position:absolute;}
 
+.item img{
+    width:100%;
+    height:auto;
+    max-width:130px;
+}
+
+/* CONTROLES DO FLASH */
 .toolbox{
     position:absolute;
-    bottom:-38px;
+    bottom:-35px;
     display:flex;
     gap:4px;
 }
@@ -116,7 +117,7 @@ function newSheet(){
 }
 newSheet();
 
-/* Carregar flashes */
+/* CARREGA FLASHES */
 let index=1;
 function loadNext(){
     const img=new Image();
@@ -134,29 +135,27 @@ function addCatalog(src){
 }
 loadNext();
 
-/* Posição automática */
+/* POSICIONAMENTO AUTOMÁTICO CORRETO */
 function getNextPosition(){
-    const items = currentSheet.querySelectorAll('.item');
-    const cols = 4;  // quantidade ideal
-    const margin = 10;
+    const items=currentSheet.querySelectorAll('.item');
+    const cols=4;
+    const margin=10;
+    const sheetWidth=currentSheet.clientWidth;
+    const cellW=(sheetWidth-(cols+1)*margin)/cols;
+    const cellH=cellW*1.1;
 
-    const sheetWidth = currentSheet.clientWidth;
-    const cellW = (sheetWidth - margin*(cols+1)) / cols;
-    const cellH = cellW * 1.2;
+    let i=items.length;
+    let col=i%cols;
+    let row=Math.floor(i/cols);
 
-    let i = items.length;
-    let col = i % cols;
-    let row = Math.floor(i / cols);
-
-    return {
-        x: margin + col * (cellW + margin),
-        y: margin + row * (cellH + margin)
+    return{
+        x:margin+col*(cellW+margin),
+        y:margin+row*(cellH+margin),
+        w:cellW
     };
 }
 
-}
-
-/* Adicionar desenho */
+/* ADICIONAR FLASH */
 function addToSheet(src){
     if(currentSheet.querySelectorAll('.item').length>=20){
         newSheet();
@@ -167,6 +166,7 @@ function addToSheet(src){
     box.className='item';
     box.style.left=pos.x+'px';
     box.style.top=pos.y+'px';
+    box.style.width=pos.w+'px';
 
     const img=document.createElement('img');
     img.src=src;
@@ -176,11 +176,11 @@ function addToSheet(src){
 
     const plus=document.createElement('button');
     plus.innerText='+';
-    plus.onclick=()=>img.style.height=(img.offsetHeight+8)+'px';
+    plus.onclick=()=>img.style.maxWidth=(img.clientWidth+10)+'px';
 
     const minus=document.createElement('button');
     minus.innerText='-';
-    minus.onclick=()=>img.style.height=(img.offsetHeight-8)+'px';
+    minus.onclick=()=>img.style.maxWidth=(img.clientWidth-10)+'px';
 
     const del=document.createElement('button');
     del.innerText='X';
@@ -192,36 +192,19 @@ function addToSheet(src){
     currentSheet.appendChild(box);
 }
 
-/* Organizar */
+/* ORGANIZAR */
 function autoArrange(){
     const items=currentSheet.querySelectorAll('.item');
-    let x=10,y=10,rowH=0;
-    items.forEach(it=>{
-        const w=it.offsetWidth;
-        const h=it.offsetHeight;
-        if(x+w>currentSheet.clientWidth-10){x=10;y+=rowH+20;rowH=0;}
-        it.style.left=x+'px';
-        it.style.top=y+'px';
-        x+=w+20;
-        rowH=Math.max(rowH,h);
-    });
+    items.forEach(it=>it.remove());
+    const saved=[...items].map(i=>i.querySelector('img').src);
+    saved.forEach(src=>addToSheet(src));
 }
 
-/* Service Worker */
+/* OFFLINE */
 if('serviceWorker' in navigator){
- navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js');
 }
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
