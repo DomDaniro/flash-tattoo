@@ -137,10 +137,10 @@ loadNext();
 /* Posição automática */
 function getNextPosition(){
     const items=currentSheet.querySelectorAll('.item');
-    const cols=4;
-    const cellW=140;
-    const cellH=160;
-    const margin=10;
+    const cols=5;
+    const cellW=110;
+    const cellH=130;
+    const margin=8;
     let i=items.length;
     return {x:margin+(i%cols)*cellW, y:margin+Math.floor(i/cols)*cellH};
 }
@@ -188,7 +188,7 @@ function autoArrange(){
     items.forEach(it=>{
         const w=it.offsetWidth;
         const h=it.offsetHeight;
-        if(x+w>currentSheet.clientWidth-20){x=10;y+=rowH+20;rowH=0;}
+        if(x+w>currentSheet.clientWidth-10){x=10;y+=rowH+20;rowH=0;}
         it.style.left=x+'px';
         it.style.top=y+'px';
         x+=w+20;
@@ -203,6 +203,7 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
+
 
 
 
