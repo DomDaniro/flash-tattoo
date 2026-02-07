@@ -1,209 +1,222 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flash Tattoo Studio</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash Tattoo Studio PRO</title>
 
 <style>
-*{box-sizing:border-box;}
-
 body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#000;
-    color:white;
+margin:0;
+background:#000;
+font-family:Arial, sans-serif;
+color:white;
+text-align:center;
 }
 
-#logo{
-    position:fixed;
-    top:10px;
-    right:15px;
-    height:70px;
-}
-
-.controls{
-    margin-top:90px;
-    text-align:center;
+header{
+padding:15px;
 }
 
 button{
-    padding:8px 12px;
-    margin:5px;
-    border:none;
-    border-radius:20px;
-    font-size:14px;
+background:white;
+color:#1976d2;
+border:none;
+padding:10px 16px;
+margin:5px;
+border-radius:20px;
+font-weight:bold;
 }
 
-/* CATÁLOGO */
 #catalog{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
-    gap:10px;
-    padding:10px;
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+padding:10px;
 }
 
-.flash{
-    background:white;
-    border-radius:8px;
-    padding:5px;
+#catalog img{
+width:90px;
+background:white;
+border-radius:12px;
+padding:6px;
 }
 
-.flash img{width:100%;}
-
-/* FOLHA */
 .sheet{
-    width:95%;
-    max-width:794px;
-    aspect-ratio:794/1123;
-    background:white;
-    margin:20px auto;
-    position:relative;
-    border-radius:8px;
-    overflow:hidden;
+width:794px;
+height:1123px;
+background:white;
+margin:20px auto;
+position:relative;
+border-radius:20px;
 }
 
-/* FLASH NA FOLHA */
-.item{position:absolute;}
+.item{
+position:absolute;
+text-align:center;
+}
 
 .item img{
-    width:100%;
-    height:auto;
-    max-width:130px;
+width:100%;
 }
 
-/* CONTROLES DO FLASH */
-.toolbox{
-    position:absolute;
-    bottom:-35px;
-    display:flex;
-    gap:4px;
+.textItem{
+position:absolute;
+cursor:move;
+white-space:nowrap;
 }
 
-.toolbox button{
-    font-size:12px;
-    padding:2px 4px;
+.textTools button{
+font-size:12px;
+padding:3px 6px;
+margin:2px;
+border-radius:6px;
+}
+
+@media(max-width:820px){
+.sheet{
+transform:scale(0.5);
+transform-origin:top center;
+}
 }
 </style>
 </head>
-
 <body>
 
-<img src="logo.png" id="logo">
+<header>
+<button onclick="newSheet()">Nova Folha</button>
+<button onclick="organize()">Organizar</button>
+<button onclick="window.print()">Imprimir</button>
+</header>
 
-<div class="controls">
-    <button onclick="newSheet()">Nova Folha</button>
-    <button onclick="autoArrange()">Organizar</button>
-    <button onclick="window.print()">Imprimir</button>
-</div>
+<h2>Catálogo</h2>
 
-<h3 style="text-align:center;">Catálogo</h3>
 <div id="catalog"></div>
+
+<h3>Texto para tatuagem</h3>
+
+<input id="textInput" placeholder="Digite a frase" style="padding:6px;border-radius:8px;border:none">
+
+<select id="fontSelect">
+<option value="Arial">Simples</option>
+<option value="Georgia">Elegante</option>
+<option value="Courier New">Old School</option>
+<option value="Brush Script MT">Cursiva</option>
+</select>
+
+<br><br>
+
+Tamanho <input type="range" id="sizeRange" min="14" max="80" value="30">
+Curva <input type="range" id="curveRange" min="-100" max="100" value="0">
+Espaçamento <input type="range" id="spacingRange" min="0" max="10" value="0">
+Contorno <input type="range" id="outlineRange" min="0" max="5" value="0">
+Sombra <input type="range" id="shadowRange" min="0" max="10" value="0">
+
+<br><br>
+<button onclick="addTextToSheet()">Adicionar Texto na Folha</button>
+
 <div id="sheets"></div>
 
 <script>
+
 const catalog=document.getElementById('catalog');
 const sheets=document.getElementById('sheets');
-let currentSheet;
+let currentSheet=null;
+
+for(let i=1;i<=30;i++){
+const img=document.createElement('img');
+img.src='flashes/'+i+'.png';
+img.onclick=()=>addFlash(img.src);
+catalog.appendChild(img);
+}
 
 function newSheet(){
-    currentSheet=document.createElement('div');
-    currentSheet.className='sheet';
-    sheets.appendChild(currentSheet);
+currentSheet=document.createElement('div');
+currentSheet.className='sheet';
+sheets.appendChild(currentSheet);
 }
+
 newSheet();
 
-/* CARREGA FLASHES */
-let index=1;
-function loadNext(){
-    const img=new Image();
-    img.src="flashes/"+index+".png";
-    img.onload=()=>{addCatalog(img.src);index++;loadNext();}
-}
-function addCatalog(src){
-    const box=document.createElement('div');
-    box.className='flash';
-    const img=document.createElement('img');
-    img.src=src;
-    img.onclick=()=>addToSheet(src);
-    box.appendChild(img);
-    catalog.appendChild(box);
-}
-loadNext();
-
-/* POSICIONAMENTO AUTOMÁTICO CORRETO */
 function getNextPosition(){
-    const items=currentSheet.querySelectorAll('.item');
-    const cols=4;
-    const margin=10;
-    const sheetWidth=currentSheet.clientWidth;
-    const cellW=(sheetWidth-(cols+1)*margin)/cols;
-    const cellH=cellW*1.1;
-
-    let i=items.length;
-    let col=i%cols;
-    let row=Math.floor(i/cols);
-
-    return{
-        x:margin+col*(cellW+margin),
-        y:margin+row*(cellH+margin),
-        w:cellW
-    };
+const items=currentSheet.querySelectorAll('.item');
+const cols=4;
+const margin=10;
+const sheetWidth=currentSheet.clientWidth;
+const cellW=(sheetWidth-margin*(cols+1))/cols;
+const cellH=cellW*1.2;
+let i=items.length;
+let col=i%cols;
+let row=Math.floor(i/cols);
+return {x:margin+col*(cellW+margin),y:margin+row*(cellH+margin)};
 }
 
-/* ADICIONAR FLASH */
-function addToSheet(src){
-    if(currentSheet.querySelectorAll('.item').length>=20){
-        newSheet();
-    }
-
-    const pos=getNextPosition();
-    const box=document.createElement('div');
-    box.className='item';
-    box.style.left=pos.x+'px';
-    box.style.top=pos.y+'px';
-    box.style.width=pos.w+'px';
-
-    const img=document.createElement('img');
-    img.src=src;
-
-    const tools=document.createElement('div');
-    tools.className='toolbox';
-
-    const plus=document.createElement('button');
-    plus.innerText='+';
-    plus.onclick=()=>img.style.maxWidth=(img.clientWidth+10)+'px';
-
-    const minus=document.createElement('button');
-    minus.innerText='-';
-    minus.onclick=()=>img.style.maxWidth=(img.clientWidth-10)+'px';
-
-    const del=document.createElement('button');
-    del.innerText='X';
-    del.onclick=()=>box.remove();
-
-    tools.append(plus,minus,del);
-    box.appendChild(img);
-    box.appendChild(tools);
-    currentSheet.appendChild(box);
+function addFlash(src){
+if(currentSheet.querySelectorAll('.item').length>=20)newSheet();
+const pos=getNextPosition();
+const div=document.createElement('div');
+div.className='item';
+div.style.left=pos.x+'px';
+div.style.top=pos.y+'px';
+div.style.width='120px';
+div.innerHTML=`<img src="${src}"><br>
+<button onclick="resize(this,10)">+</button>
+<button onclick="resize(this,-10)">-</button>
+<button onclick="this.parentElement.remove()">X</button>`;
+currentSheet.appendChild(div);
 }
 
-/* ORGANIZAR */
-function autoArrange(){
-    const items=currentSheet.querySelectorAll('.item');
-    items.forEach(it=>it.remove());
-    const saved=[...items].map(i=>i.querySelector('img').src);
-    saved.forEach(src=>addToSheet(src));
+function resize(btn,val){
+const p=btn.parentElement;
+p.style.width=(p.offsetWidth+val)+'px';
 }
 
-/* OFFLINE */
-if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js');
+function organize(){
+const items=currentSheet.querySelectorAll('.item');
+items.forEach((it,i)=>{
+const pos=getNextPosition(i);
+it.style.left=pos.x+'px';
+it.style.top=pos.y+'px';
+});
 }
+
+function addTextToSheet(){
+const text=document.getElementById('textInput').value;
+if(!text)return;
+const div=document.createElement('div');
+div.className='textItem';
+div.dataset.text=text;
+div.style.left='100px';
+div.style.top='100px';
+updateText(div);
+currentSheet.appendChild(div);
+}
+
+function updateText(div){
+const size=document.getElementById('sizeRange').value;
+const curve=document.getElementById('curveRange').value;
+const spacing=document.getElementById('spacingRange').value;
+const outline=document.getElementById('outlineRange').value;
+const shadow=document.getElementById('shadowRange').value;
+const font=document.getElementById('fontSelect').value;
+
+div.innerHTML="";
+div.style.fontSize=size+'px';
+div.style.fontFamily=font;
+div.style.letterSpacing=spacing+'px';
+div.style.color='black';
+div.style.textShadow=shadow>0?`2px 2px ${shadow}px rgba(0,0,0,0.4)`:'none';
+div.style.webkitTextStroke=outline+'px black';
+div.textContent=div.dataset.text;
+}
+
+document.querySelectorAll('input,select').forEach(el=>{
+el.oninput=()=>{
+const t=currentSheet.querySelector('.textItem');
+if(t)updateText(t);
+}
+});
 </script>
 
 </body>
