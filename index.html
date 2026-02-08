@@ -1,17 +1,18 @@
 <script>
 const catalog=document.getElementById('catalog');
 const sheets=document.getElementById('sheets');
-let currentSheet;
+let currentSheet=null;
 
-/* CARREGAR FLASHES */
+/* PROTEÇÃO — só roda se os elementos existirem */
+if(catalog){
 for(let i=1;i<=40;i++){
 const img=document.createElement('img');
 img.src='flashes/'+i+'.png';
 img.onclick=()=>addFlash(img.src);
 catalog.appendChild(img);
 }
+}
 
-/* NOVA FOLHA */
 function newSheet(){
 const wrap=document.createElement('div');
 wrap.className='sheetWrapper';
@@ -34,33 +35,28 @@ sheets.appendChild(wrap);
 }
 newSheet();
 
-/* CSS ESPELHO */
+/* ESPELHO */
 const style=document.createElement('style');
 style.innerHTML=`.flipped{transform:scaleX(-1);} `;
 document.head.appendChild(style);
 
-/* POSIÇÃO AUTOMÁTICA */
+/* POSIÇÃO */
 function getNextPosition(){
 const items=currentSheet.querySelectorAll('.item');
-const cols=5;          // MAIS COLUNAS
-const margin=8;
+const cols=5, margin=8;
 const w=(currentSheet.clientWidth-margin*(cols+1))/cols;
-
 let i=items.length;
-return{
-x:margin+(i%cols)*(w+margin),
-y:margin+Math.floor(i/cols)*(w+margin)
-};
+return{ x:margin+(i%cols)*(w+margin), y:margin+Math.floor(i/cols)*(w+margin)};
 }
 
-/* ADICIONAR FLASH */
+/* FLASH */
 function addFlash(src){
 const pos=getNextPosition();
 const div=document.createElement('div');
 div.className='item';
 div.style.left=pos.x+'px';
 div.style.top=pos.y+'px';
-div.style.width='90px'; // 🔥 menor
+div.style.width='90px';
 
 div.innerHTML=`<img src="${src}"><br>
 <button onclick="resize(this,8)">+</button>
@@ -76,21 +72,14 @@ const p=btn.parentElement;
 p.style.width=(p.offsetWidth+val)+'px';
 }
 
-/* ORGANIZAR */
-function organize(){
-const items=currentSheet.querySelectorAll('.item');
-items.forEach((it,i)=>{
-const cols=5,margin=8;
-const w=(currentSheet.clientWidth-margin*(cols+1))/cols;
-it.style.left=(margin+(i%cols)*(w+margin))+'px';
-it.style.top=(margin+Math.floor(i/cols)*(w+margin))+'px';
-});
-}
-
 /* TEXTO */
 function addTextToSheet(){
-const text=document.getElementById('textInput').value;
+const input=document.getElementById('textInput');
+if(!input)return;
+
+const text=input.value;
 if(!text)return;
+
 const div=document.createElement('div');
 div.className='textItem';
 div.dataset.text=text;
@@ -108,20 +97,21 @@ currentSheet.appendChild(div);
 }
 
 function updateText(div){
-div.style.fontSize=sizeRange.value+'px';
-div.style.fontFamily=fontSelect.value;
-div.style.letterSpacing=spacingRange.value+'px';
-div.style.webkitTextStroke=outlineRange.value+'px black';
-div.style.textShadow=shadowRange.value>0?`2px 2px ${shadowRange.value}px rgba(0,0,0,0.5)`:'none';
+const size=document.getElementById('sizeRange');
+const font=document.getElementById('fontSelect');
+const spacing=document.getElementById('spacingRange');
+const outline=document.getElementById('outlineRange');
+const shadow=document.getElementById('shadowRange');
+
+if(!size||!font||!spacing||!outline||!shadow)return;
+
+div.style.fontSize=size.value+'px';
+div.style.fontFamily=font.value;
+div.style.letterSpacing=spacing.value+'px';
+div.style.webkitTextStroke=outline.value+'px black';
+div.style.textShadow=shadow.value>0?`2px 2px ${shadow.value}px rgba(0,0,0,0.5)`:'none';
 div.textContent=div.dataset.text;
 }
-
-document.querySelectorAll('input,select').forEach(el=>{
-el.oninput=()=>{
-const t=currentSheet.querySelector('.textItem');
-if(t)updateText(t);
-}
-});
 
 /* ARRASTAR */
 function makeDraggable(el){
@@ -156,4 +146,3 @@ document.removeEventListener('touchmove',move);
 }
 }
 </script>
-
