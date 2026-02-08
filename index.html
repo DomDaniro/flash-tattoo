@@ -1,156 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flash Tattoo Studio</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel&family=Great+Vibes&family=Permanent+Marker&family=Playfair+Display&family=Special+Elite&display=swap" rel="stylesheet">
-
-<style>
-body{
-margin:0;
-background:#000;
-color:white;
-font-family:Arial;
-}
-
-/* TOPO */
-header{
-text-align:center;
-padding:15px;
-}
-
-button{
-background:white;
-color:#1976d2;
-border:none;
-padding:8px 14px;
-margin:5px;
-border-radius:20px;
-font-weight:bold;
-}
-
-/* CATÁLOGO */
-#catalog{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(85px,1fr));
-gap:10px;
-padding:10px;
-max-width:900px;
-margin:auto;
-}
-
-#catalog img{
-background:white;
-padding:6px;
-border-radius:12px;
-width:100%;
-}
-
-/* PAINEL TEXTO */
-.panel{
-background:#111;
-margin:20px auto;
-padding:15px;
-border-radius:15px;
-max-width:900px;
-}
-
-.panel input,.panel select{
-padding:6px;
-border-radius:8px;
-border:none;
-margin:4px;
-}
-
-.controls{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:10px;
-}
-
-/* FOLHA */
-.sheetWrapper{
-display:flex;
-justify-content:center;
-}
-
-.sheet{
-width:95%;
-max-width:794px;
-aspect-ratio:794/1123;
-background:white;
-position:relative;
-border-radius:20px;
-margin:20px 0;
-}
-
-.item{position:absolute;text-align:center;}
-.item img{width:100%;}
-
-.textItem{
-position:absolute;
-white-space:nowrap;
-color:black;
-}
-
-.textBtns{
-position:absolute;
-bottom:-25px;
-}
-.textBtns button{
-font-size:11px;
-padding:2px 5px;
-margin:1px;
-border-radius:6px;
-}
-
-/* IMPRESSÃO A4 */
-@media print{
-body{background:white;}
-.panel,header,#catalog{display:none;}
-.sheet{width:794px;height:1123px;}
-}
-</style>
-</head>
-<body>
-
-<header>
-<button onclick="newSheet()">Nova Folha</button>
-<button onclick="organize()">Organizar</button>
-<button onclick="window.print()">Imprimir</button>
-</header>
-
-<h2 style="text-align:center;">Catálogo</h2>
-<div id="catalog"></div>
-
-<div class="panel">
-<h3>Texto para tatuagem</h3>
-<input id="textInput" placeholder="Digite a frase">
-
-<select id="fontSelect">
-<option value="Anton">Bold Tattoo</option>
-<option value="Cinzel">Romana</option>
-<option value="Playfair Display">Elegante</option>
-<option value="Permanent Marker">Rabiscado</option>
-<option value="Great Vibes">Cursiva</option>
-<option value="Special Elite">Old School</option>
-</select>
-
-<div class="controls">
-<label>Tamanho <input type="range" id="sizeRange" min="14" max="80" value="30"></label>
-<label>Espaçamento <input type="range" id="spacingRange" min="0" max="10" value="0"></label>
-<label>Contorno <input type="range" id="outlineRange" min="0" max="5" value="0"></label>
-<label>Sombra <input type="range" id="shadowRange" min="0" max="10" value="0"></label>
-</div>
-
-<button onclick="addTextToSheet()">Adicionar Texto na Folha</button>
-</div>
-
-<div id="sheets"></div>
-
 <script>
 const catalog=document.getElementById('catalog');
 const sheets=document.getElementById('sheets');
@@ -180,16 +27,14 @@ flipBtn.style.position='absolute';
 flipBtn.style.top='10px';
 flipBtn.style.right='10px';
 flipBtn.style.zIndex='10';
-flipBtn.onclick=()=>{
-currentSheet.classList.toggle('flipped');
-};
+flipBtn.onclick=()=>{ currentSheet.classList.toggle('flipped'); };
 wrap.appendChild(flipBtn);
 
 sheets.appendChild(wrap);
 }
 newSheet();
 
-/* CSS DO ESPELHO */
+/* CSS ESPELHO */
 const style=document.createElement('style');
 style.innerHTML=`.flipped{transform:scaleX(-1);} `;
 document.head.appendChild(style);
@@ -197,24 +42,31 @@ document.head.appendChild(style);
 /* POSIÇÃO AUTOMÁTICA */
 function getNextPosition(){
 const items=currentSheet.querySelectorAll('.item');
-const cols=4,margin=10;
+const cols=5;          // MAIS COLUNAS
+const margin=8;
 const w=(currentSheet.clientWidth-margin*(cols+1))/cols;
+
 let i=items.length;
-return{ x:margin+(i%cols)*(w+margin), y:margin+Math.floor(i/cols)*(w+margin)};
+return{
+x:margin+(i%cols)*(w+margin),
+y:margin+Math.floor(i/cols)*(w+margin)
+};
 }
 
-/* FLASH */
+/* ADICIONAR FLASH */
 function addFlash(src){
 const pos=getNextPosition();
 const div=document.createElement('div');
 div.className='item';
 div.style.left=pos.x+'px';
 div.style.top=pos.y+'px';
-div.style.width='120px';
+div.style.width='90px'; // 🔥 menor
+
 div.innerHTML=`<img src="${src}"><br>
-<button onclick="resize(this,10)">+</button>
-<button onclick="resize(this,-10)">-</button>
+<button onclick="resize(this,8)">+</button>
+<button onclick="resize(this,-8)">-</button>
 <button onclick="this.parentElement.remove()">X</button>`;
+
 makeDraggable(div);
 currentSheet.appendChild(div);
 }
@@ -228,9 +80,10 @@ p.style.width=(p.offsetWidth+val)+'px';
 function organize(){
 const items=currentSheet.querySelectorAll('.item');
 items.forEach((it,i)=>{
-const pos=getNextPosition(i);
-it.style.left=pos.x+'px';
-it.style.top=pos.y+'px';
+const cols=5,margin=8;
+const w=(currentSheet.clientWidth-margin*(cols+1))/cols;
+it.style.left=(margin+(i%cols)*(w+margin))+'px';
+it.style.top=(margin+Math.floor(i/cols)*(w+margin))+'px';
 });
 }
 
@@ -270,7 +123,7 @@ if(t)updateText(t);
 }
 });
 
-/* ARRASTAR COM DEDO/MOUSE */
+/* ARRASTAR */
 function makeDraggable(el){
 let isDown=false, offsetX=0, offsetY=0;
 
@@ -303,7 +156,3 @@ document.removeEventListener('touchmove',move);
 }
 }
 </script>
-
-</body>
-</html>
-
