@@ -156,6 +156,7 @@ const catalog=document.getElementById('catalog');
 const sheets=document.getElementById('sheets');
 let currentSheet;
 
+/* CARREGAR FLASHES */
 for(let i=1;i<=40;i++){
 const img=document.createElement('img');
 img.src='flashes/'+i+'.png';
@@ -163,16 +164,37 @@ img.onclick=()=>addFlash(img.src);
 catalog.appendChild(img);
 }
 
+/* NOVA FOLHA */
 function newSheet(){
 const wrap=document.createElement('div');
 wrap.className='sheetWrapper';
+
 currentSheet=document.createElement('div');
 currentSheet.className='sheet';
 wrap.appendChild(currentSheet);
+
+/* BOTÃO ESPELHAR */
+const flipBtn=document.createElement('button');
+flipBtn.textContent='⇋';
+flipBtn.style.position='absolute';
+flipBtn.style.top='10px';
+flipBtn.style.right='10px';
+flipBtn.style.zIndex='10';
+flipBtn.onclick=()=>{
+currentSheet.classList.toggle('flipped');
+};
+wrap.appendChild(flipBtn);
+
 sheets.appendChild(wrap);
 }
 newSheet();
 
+/* CSS DO ESPELHO */
+const style=document.createElement('style');
+style.innerHTML=`.flipped{transform:scaleX(-1);} `;
+document.head.appendChild(style);
+
+/* POSIÇÃO AUTOMÁTICA */
 function getNextPosition(){
 const items=currentSheet.querySelectorAll('.item');
 const cols=4,margin=10;
@@ -181,6 +203,7 @@ let i=items.length;
 return{ x:margin+(i%cols)*(w+margin), y:margin+Math.floor(i/cols)*(w+margin)};
 }
 
+/* FLASH */
 function addFlash(src){
 const pos=getNextPosition();
 const div=document.createElement('div');
@@ -192,6 +215,7 @@ div.innerHTML=`<img src="${src}"><br>
 <button onclick="resize(this,10)">+</button>
 <button onclick="resize(this,-10)">-</button>
 <button onclick="this.parentElement.remove()">X</button>`;
+makeDraggable(div);
 currentSheet.appendChild(div);
 }
 
@@ -200,6 +224,7 @@ const p=btn.parentElement;
 p.style.width=(p.offsetWidth+val)+'px';
 }
 
+/* ORGANIZAR */
 function organize(){
 const items=currentSheet.querySelectorAll('.item');
 items.forEach((it,i)=>{
@@ -209,14 +234,15 @@ it.style.top=pos.y+'px';
 });
 }
 
+/* TEXTO */
 function addTextToSheet(){
 const text=document.getElementById('textInput').value;
 if(!text)return;
 const div=document.createElement('div');
 div.className='textItem';
 div.dataset.text=text;
-div.style.left='100px';
-div.style.top='150px';
+div.style.left='120px';
+div.style.top='200px';
 updateText(div);
 
 const btns=document.createElement('div');
@@ -224,6 +250,7 @@ btns.className='textBtns';
 btns.innerHTML=`<button onclick="this.parentElement.parentElement.remove()">🗑</button>`;
 div.appendChild(btns);
 
+makeDraggable(div);
 currentSheet.appendChild(div);
 }
 
@@ -242,7 +269,41 @@ const t=currentSheet.querySelector('.textItem');
 if(t)updateText(t);
 }
 });
+
+/* ARRASTAR COM DEDO/MOUSE */
+function makeDraggable(el){
+let isDown=false, offsetX=0, offsetY=0;
+
+el.addEventListener('mousedown',start);
+el.addEventListener('touchstart',start);
+
+function start(e){
+isDown=true;
+const rect=el.getBoundingClientRect();
+offsetX=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+offsetY=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+document.addEventListener('mousemove',move);
+document.addEventListener('touchmove',move);
+document.addEventListener('mouseup',stop);
+document.addEventListener('touchend',stop);
+}
+
+function move(e){
+if(!isDown)return;
+let x=(e.touches?e.touches[0].clientX:e.clientX)-offsetX;
+let y=(e.touches?e.touches[0].clientY:e.clientY)-offsetY;
+el.style.left=(x-currentSheet.getBoundingClientRect().left)+'px';
+el.style.top=(y-currentSheet.getBoundingClientRect().top)+'px';
+}
+
+function stop(){
+isDown=false;
+document.removeEventListener('mousemove',move);
+document.removeEventListener('touchmove',move);
+}
+}
 </script>
 
 </body>
 </html>
+
